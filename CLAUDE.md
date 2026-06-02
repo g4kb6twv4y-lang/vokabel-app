@@ -25,11 +25,20 @@ Exports two globals consumed by the HTML:
 - `CATEGORIES` — ordered array of category name strings, starting with `'Alle'`. Controls the order of filter buttons in the UI.
 
 ### `index.html`
-- **Modes**: `all`, `de-pt` (German front), `pt-de` (Portuguese front).
-- **State**: `cards[]` (filtered/shuffled subset of `rawCards`), `idx`, `isFlipped`, `stats`.
+- **Modes** (`mode`): `de-pt` (German front), `pt-de` (Portuguese front), `mixed` (randomly per card). Cycled via the mode button.
+- **Sort order** (`sortMode`): `random` (shuffled) or `box` (sorted by Leitner box, lowest first).
+- **State**: `cards[]` (filtered/sorted subset of `rawCards`), `idx`, `isFlipped`, `stats` (per-session counters), `progress` (persistent, see below).
 - **`parseCard(raw)`**: splits the Portuguese string on `\n` — index 0 is the main word, the rest are conjugations shown as `·`-joined on the card back.
-- **`applyFilters()`**: rebuilds `cards[]` from `rawCards` based on the active category. Called when category or mode changes.
-- **`rate('good'|'bad')`**: increments session stats and advances to the next card. No spaced-repetition — ratings are session-only counters.
+- **`applyFilters()`**: rebuilds `cards[]` from `rawCards` based on the active category. Called when category, mode or sort order changes.
+- **`rate('good'|'bad')`**: updates per-card Leitner progress (`good` → box +1 up to 5, `bad` → box reset to 1), bumps session stats, persists, and advances.
+
+### Progress persistence (Leitner system)
+Progress **is** persisted — this is a spaced-repetition-style Leitner box system, not just session counters.
+- Stored in `localStorage` under key `vokabel-progress-v1`, as a map of `cardKey → { box, good, bad, seen, last }`.
+- **`cardKey(raw)` = `german + "|" + portuguese`** — i.e. the German term plus the *entire* Portuguese string (including the `\n`-conjugations). The category is NOT part of the key.
+- **⚠ Editing a card's German term or Portuguese string changes its key**, so the existing progress is orphaned and the card restarts at box 1. Adding conjugations to an existing verb therefore resets that verb's progress. Adding brand-new cards, reordering, or changing only the category does NOT affect existing progress.
+- `localStorage` is per-browser/per-device — desktop and the GitHub-Pages iPhone version each keep separate progress. Pushing to GitHub never touches a user's stored progress.
+- Export/Import buttons save/load the progress JSON, but import merges by `cardKey`, so it cannot re-map progress after a card's text changed.
 
 ## Adding New Vocabulary
 
