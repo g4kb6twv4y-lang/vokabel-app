@@ -38,6 +38,15 @@ Edit `vokabeln.js` only:
 2. Use an existing category from `CATEGORIES`, or add a new string to both `CATEGORIES` and the new cards.
 3. Check for duplicates by searching for the German term in the file.
 
+### Content Rules (always apply)
+
+- **Only European Portuguese (pt-PT). Never Brazilian Portuguese.** Use pt-PT vocabulary, spelling and grammar throughout (e.g. `comboio` not `trem`, `casa de banho` not `banheiro`, `pequeno-almoço` not `café da manhã`, `telemóvel` not `celular`). If a term differs between the variants, pick the Portugal form and add a `⚠`-note warning against the Brazilian one, as seen in existing cards.
+- **Verbs — two cards per verb:**
+  1. In category `Verben`: base form + all 5 present-tense conjugations, `\n`-separated in the order **eu/tu/ele/nós/eles** (e.g. `"falar\nfalo\nfalas\nfala\nfalamos\nfalam"`). Do this **even for regular verbs** — always give the full set.
+  2. In category `Präteritum`: the same verb with all 5 simple-past conjugations. Put the eu-form on line 0 and the full set in parentheses on line 1, matching the existing pattern (e.g. `"falei\n(falei, falaste, falou, falámos, falaram)"`).
+- **Adjectives & nouns with masculine/feminine forms:** always give both, separated with `/` (masculine first, then the feminine ending), e.g. `magro/a`, `bonito/a`.
+- **Nouns:** always include the article (`o`/`a`, plural `os`/`as`), e.g. `o carro`, `a mesa`, `as calças`.
+
 Card format from the XML sources:
 - `<text name="Text">` = German side
 - `<text name="Übersetzung">` = Portuguese side (literal newlines become `\n`)
