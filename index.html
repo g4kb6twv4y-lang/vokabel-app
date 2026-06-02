@@ -748,7 +748,7 @@ function rate(type) {
   if (!cards[idx]) return;
   const p = getCardProg(cards[idx]);
   if (type === 'good') { stats.good++; p.good++; p.box = Math.min(p.box + 1, 5); }
-  else { stats.bad++; p.bad++; p.box = 1; }
+  else { stats.bad++; p.bad++; p.box = Math.max(p.box - 1, 1); }
   stats.seen++; p.seen++; p.last = Date.now();
   saveProgress();
   document.getElementById('stat-good').textContent = stats.good;
