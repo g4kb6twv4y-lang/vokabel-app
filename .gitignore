@@ -1,0 +1,6 @@
+# Nur die App-Dateien veroeffentlichen, nichts Privates
+*.xml
+*.Rhistory
+PROJEKT_MEMORY.md
+history/
+.DS_Store

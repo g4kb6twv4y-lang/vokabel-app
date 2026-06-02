@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Português – Karteikarten</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Português">
+<meta name="theme-color" content="#0f0e0c">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1814;
+    --card-front: #1e1c18;
+    --card-back: #1a1f1a;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --green: #4a8c5c;
+    --green-light: #72b98a;
+    --text: #e8e2d4;
+    --text-dim: #8a8070;
+    --border: #2e2b24;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(2rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right)) calc(4rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
+    overflow-x: hidden;
+  }
+
+  /* Decorative background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(201,168,76,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(74,140,92,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  .logo span {
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 0.65em;
+  }
+
+  .subtitle {
+    margin-top: 0.4rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.5rem 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0f0e0c;
+  }
+
+  .cat-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .cat-btn:hover {
+    border-color: var(--green);
+    color: var(--green-light);
+  }
+
+  .cat-btn.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #0f0e0c;
+  }
+
+  /* Progress */
+  .progress-bar {
+    width: min(500px, 90vw);
+    height: 2px;
+    background: var(--border);
+    margin-bottom: 0.6rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--green-light));
+    transition: width 0.4s ease;
+  }
+
+  .counter {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Card */
+  .card-scene {
+    width: min(500px, 92vw);
+    height: 280px;
+    perspective: 1200px;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .card-front {
+    background: var(--card-front);
+  }
+
+  .card-back {
+    background: var(--card-back);
+    transform: rotateY(180deg);
+    border-color: var(--green);
+  }
+
+  .card-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    position: absolute;
+    top: 1rem;
+    left: 1.4rem;
+  }
+
+  .card-front .card-label { color: var(--gold); opacity: 0.6; }
+  .card-back .card-label { color: var(--green-light); opacity: 0.7; }
+
+  .card-cat {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    opacity: 0.4;
+    position: absolute;
+    top: 1rem;
+    right: 1.4rem;
+  }
+
+  .card-content {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    text-align: center;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .card-back .card-content {
+    color: var(--green-light);
+  }
+
+  .conjugations {
+    margin-top: 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  .hint {
+    position: absolute;
+    bottom: 1rem;
+    right: 1.4rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    opacity: 0.5;
+    text-transform: uppercase;
+  }
+
+  /* Nav buttons */
+  .nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 1.2rem;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Rating */
+  .rating {
+    display: flex;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 2rem;
+  }
+
+  .rate-btn {
+    padding: 0.55rem 1.3rem;
+    border: 1px solid;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    background: none;
+    transition: all 0.2s;
+  }
+
+  .rate-good {
+    border-color: var(--green);
+    color: var(--green-light);
+  }
+  .rate-good:hover {
+    background: var(--green);
+    color: #0f0e0c;
+  }
+
+  .rate-bad {
+    border-color: #7a3030;
+    color: #c06060;
+  }
+  .rate-bad:hover {
+    background: #7a3030;
+    color: var(--text);
+  }
+
+  /* Stats */
+  .stats {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat { text-align: center; }
+  .stat-num { font-size: 1.2rem; color: var(--text); font-family: 'Playfair Display', serif; }
+  .stat-num.good { color: var(--green-light); }
+  .stat-num.bad { color: #c06060; }
+
+  /* Mode badge */
+  .mode-badge {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.7rem;
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  /* Keyboard hint */
+  .kbd-hint {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    opacity: 0.5;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    margin-top: -0.5rem;
+  }
+
+  /* Finish screen */
+  .finish {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .finish.visible { display: flex; }
+
+  .finish-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: var(--gold);
+  }
+
+  .finish-sub { color: var(--text-dim); font-size: 0.8rem; letter-spacing: 0.1em; }
+
+  /* Overlay (Kategorien / Daten) */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 14, 12, 0.92);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+
+  .overlay.visible { display: flex; }
+
+  .overlay-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.75rem;
+    width: 100%;
+    max-width: min(560px, 94vw);
+    max-height: 86vh;
+    overflow-y: auto;
+    text-align: center;
+    position: relative;
+  }
+
+  .overlay-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--gold);
+    margin-bottom: 1.25rem;
+  }
+
+  .cat-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .data-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Português <span>Karteikarten</span></div>
+  <div class="subtitle">Mein Deck · Deutsch → Português</div>
+</header>
+
+<div class="controls">
+  <button class="btn" id="btn-direction" onclick="cycleDirection()">DE → PT</button>
+  <button class="btn" id="btn-order" onclick="toggleSortMode()">🎲 Zufällig</button>
+</div>
+
+<div class="controls">
+  <button class="btn" id="btn-cat" onclick="openCatOverlay()">▦ Kategorie: Alle</button>
+  <button class="btn" onclick="openDataOverlay()">⋯ Daten</button>
+</div>
+<div class="counter" id="data-msg" style="min-height:1.1em;margin-bottom:0.6rem"></div>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="counter" id="counter">1 / 0</div>
+
+<div class="card-scene" onclick="flipCard()" id="scene">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <div class="card-label" id="front-label">Deutsch</div>
+      <div class="card-cat" id="front-cat"></div>
+      <div class="card-content" id="front-text">—</div>
+      <div class="hint">Tippen zum Umdrehen</div>
+    </div>
+    <div class="card-face card-back">
+      <div class="card-label" id="back-label">Português</div>
+      <div class="card-content" id="back-main">—</div>
+      <div class="conjugations" id="back-conj"></div>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="prevCard()">←</button>
+  <button class="nav-btn" onclick="nextCard()">→</button>
+</div>
+
+<div class="rating">
+  <button class="rate-btn rate-good" onclick="rate('good')">✓ Gewusst</button>
+  <button class="rate-btn rate-bad" onclick="rate('bad')">✗ Nochmal</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num good" id="stat-good">0</div><div>Gewusst</div></div>
+  <div class="stat"><div class="stat-num" id="stat-total">0</div><div>Gesehen</div></div>
+  <div class="stat"><div class="stat-num bad" id="stat-bad">0</div><div>Nochmal</div></div>
+</div>
+
+<div class="kbd-hint" style="margin-top:1rem">Leertaste = umdrehen · ← → = navigieren · G = gewusst · N = nochmal</div>
+
+<div class="finish" id="finish">
+  <div class="finish-title">Fertig! 🎉</div>
+  <div class="finish-sub" id="finish-score"></div>
+  <button class="btn" onclick="restart()">Nochmal von vorne</button>
+</div>
+
+<div class="mode-badge" id="mode-badge">Deutsch → Português</div>
+
+<div class="overlay" id="cat-overlay" onclick="if(event.target===this)closeCatOverlay()">
+  <div class="overlay-panel">
+    <div class="overlay-title">Kategorie wählen</div>
+    <div class="cat-grid" id="cat-grid"></div>
+    <button class="btn" onclick="closeCatOverlay()">Schließen</button>
+  </div>
+</div>
+
+<div class="overlay" id="data-overlay" onclick="if(event.target===this)closeDataOverlay()">
+  <div class="overlay-panel">
+    <div class="overlay-title">Fortschritt-Daten</div>
+    <div class="data-actions">
+      <button class="btn" onclick="exportProgress()">↧ Export</button>
+      <button class="btn" onclick="document.getElementById('import-file').click()">↥ Import</button>
+      <button class="btn" onclick="resetProgress()">⟲ Reset</button>
+    </div>
+    <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importProgress(this.files[0])">
+    <button class="btn" onclick="closeDataOverlay()">Schließen</button>
+  </div>
+</div>
+
+<script src="vokabeln.js"></script>
+<script>
+let cards = [...rawCards];
+let cardSides = [];
+let mode = 'de-pt';
+let activeCat = 'Alle';
+let idx = 0;
+let isFlipped = false;
+let stats = { good: 0, bad: 0, seen: 0 };
+let sortMode = 'random';
+
+const PROG_KEY = 'vokabel-progress-v1';
+let progress = loadProgress();
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROG_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+
+function saveProgress() {
+  try { localStorage.setItem(PROG_KEY, JSON.stringify(progress)); }
+  catch (e) { dataMsg('Speichern fehlgeschlagen'); }
+}
+
+function cardKey(raw) { return raw[0] + '|' + raw[1]; }
+
+function getCardProg(raw) {
+  const k = cardKey(raw);
+  if (!progress[k]) progress[k] = { box: 1, good: 0, bad: 0, seen: 0, last: 0 };
+  return progress[k];
+}
+
+function dataMsg(t) {
+  const el = document.getElementById('data-msg');
+  el.textContent = t;
+  clearTimeout(dataMsg._t);
+  dataMsg._t = setTimeout(() => { el.textContent = ''; }, 2500);
+}
+
+function toggleSortMode() {
+  sortMode = (sortMode === 'random') ? 'box' : 'random';
+  document.getElementById('btn-order').textContent =
+    (sortMode === 'box') ? '📊 Nach Box' : '🎲 Zufällig';
+  document.getElementById('btn-order').classList.toggle('active', sortMode === 'box');
+  applyFilters();
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function exportProgress() {
+  const blob = new Blob([JSON.stringify(progress, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'vokabel-fortschritt.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  closeDataOverlay();
+  dataMsg('Fortschritt exportiert');
+}
+
+function importProgress(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let incoming;
+    try { incoming = JSON.parse(reader.result); }
+    catch (e) { dataMsg('Import fehlgeschlagen: ungültige Datei'); return; }
+    let count = 0;
+    for (const k in incoming) {
+      const inc = incoming[k];
+      const cur = progress[k];
+      if (!cur || (inc.seen || 0) > (cur.seen || 0) || (inc.last || 0) > (cur.last || 0)) {
+        progress[k] = inc; count++;
+      }
+    }
+    saveProgress();
+    showCard();
+    closeDataOverlay();
+    dataMsg(count + ' Karten importiert');
+  };
+  reader.readAsText(file);
+  document.getElementById('import-file').value = '';
+}
+
+function resetProgress() {
+  if (!confirm('Gesamten Fortschritt wirklich löschen?')) return;
+  progress = {};
+  localStorage.removeItem(PROG_KEY);
+  showCard();
+  closeDataOverlay();
+  dataMsg('Fortschritt zurückgesetzt');
+}
+
+function catCount(cat) {
+  return cat === 'Alle' ? rawCards.length : rawCards.filter(r => r[2] === cat).length;
+}
+
+function buildCatButtons() {
+  const grid = document.getElementById('cat-grid');
+  CATEGORIES.forEach(cat => {
+    const b = document.createElement('button');
+    b.className = 'cat-btn' + (cat === 'Alle' ? ' active' : '');
+    b.id = 'cat-' + cat;
+    b.textContent = cat + ' (' + catCount(cat) + ')';
+    b.onclick = () => setCat(cat);
+    grid.appendChild(b);
+  });
+}
+
+function setCat(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('cat-' + cat).classList.add('active');
+  document.getElementById('btn-cat').textContent = '▦ Kategorie: ' + cat;
+  closeCatOverlay();
+  applyFilters();
+}
+
+function openCatOverlay() { document.getElementById('cat-overlay').classList.add('visible'); }
+function closeCatOverlay() { document.getElementById('cat-overlay').classList.remove('visible'); }
+function openDataOverlay() { document.getElementById('data-overlay').classList.add('visible'); }
+function closeDataOverlay() { document.getElementById('data-overlay').classList.remove('visible'); }
+
+function applyFilters() {
+  cards = rawCards.filter(r => activeCat === 'Alle' || r[2] === activeCat);
+  shuffleArray(cards);
+  if (sortMode === 'box') cards.sort((a, b) => getCardProg(a).box - getCardProg(b).box);
+  assignMixedSides();
+  idx = 0;
+  stats = { good: 0, bad: 0, seen: 0 };
+  document.getElementById('stat-good').textContent = 0;
+  document.getElementById('stat-bad').textContent = 0;
+  document.getElementById('stat-total').textContent = 0;
+  showCard();
+}
+
+function parseCard(raw) {
+  const [de, pt, cat] = raw;
+  const lines = pt.trim().split('\n');
+  const main = lines[0];
+  const conj = lines.slice(1).join(' · ');
+  return { de, pt, main, conj, cat };
+}
+
+function assignMixedSides() {
+  cardSides = cards.map(() => Math.random() < 0.5 ? 'de-pt' : 'pt-de');
+}
+
+function getDisplay(c, dir) {
+  if (dir === 'pt-de') return { front: c.main, frontLabel: 'Português', back: c.de, backLabel: 'Deutsch', conj: c.conj };
+  return { front: c.de, frontLabel: 'Deutsch', back: c.main, backLabel: 'Português', conj: c.conj };
+}
+
+function showCard() {
+  if (cards.length === 0) {
+    document.getElementById('scene').style.display = 'none';
+    document.getElementById('finish').classList.add('visible');
+    document.getElementById('finish-score').textContent = 'Keine Karten in dieser Kategorie.';
+    document.getElementById('counter').textContent = '0 / 0';
+    document.getElementById('progress').style.width = '0%';
+    return;
+  }
+  const c = parseCard(cards[idx]);
+  const dir = (mode === 'mixed') ? (cardSides[idx] || 'de-pt') : mode;
+  const d = getDisplay(c, dir);
+  const prog = getCardProg(cards[idx]);
+  document.getElementById('front-text').textContent = d.front;
+  document.getElementById('front-label').textContent = d.frontLabel;
+  document.getElementById('front-cat').textContent = c.cat + ' · Box ' + prog.box + '/5';
+  document.getElementById('back-main').textContent = d.back;
+  document.getElementById('back-label').textContent = d.backLabel;
+  document.getElementById('back-conj').textContent = (dir === 'de-pt') ? d.conj : '';
+  document.getElementById('counter').textContent = `${idx + 1} / ${cards.length}`;
+  document.getElementById('progress').style.width = `${((idx + 1) / cards.length) * 100}%`;
+  document.getElementById('card').classList.remove('flipped');
+  isFlipped = false;
+
+  if (idx >= cards.length) {
+    document.getElementById('scene').style.display = 'none';
+    document.getElementById('finish').classList.add('visible');
+    document.getElementById('finish-score').textContent =
+      `${stats.good} gewusst · ${stats.bad} zum Wiederholen · ${stats.seen} gesehen`;
+  } else {
+    document.getElementById('scene').style.display = 'block';
+    document.getElementById('finish').classList.remove('visible');
+  }
+}
+
+function flipCard() {
+  document.getElementById('card').classList.toggle('flipped');
+  isFlipped = !isFlipped;
+}
+
+function nextCard() {
+  if (idx < cards.length - 1) { idx++; showCard(); }
+}
+
+function prevCard() {
+  if (idx > 0) { idx--; showCard(); }
+}
+
+function rate(type) {
+  if (!cards[idx]) return;
+  const p = getCardProg(cards[idx]);
+  if (type === 'good') { stats.good++; p.good++; p.box = Math.min(p.box + 1, 5); }
+  else { stats.bad++; p.bad++; p.box = 1; }
+  stats.seen++; p.seen++; p.last = Date.now();
+  saveProgress();
+  document.getElementById('stat-good').textContent = stats.good;
+  document.getElementById('stat-bad').textContent = stats.bad;
+  document.getElementById('stat-total').textContent = stats.seen;
+  if (idx < cards.length - 1) { idx++; showCard(); }
+  else {
+    document.getElementById('scene').style.display = 'none';
+    document.getElementById('finish').classList.add('visible');
+    document.getElementById('finish-score').textContent =
+      `${stats.good} gewusst · ${stats.bad} zum Wiederholen · ${stats.seen} gesehen`;
+  }
+}
+
+function cycleDirection() {
+  const order = ['de-pt', 'pt-de', 'mixed'];
+  mode = order[(order.indexOf(mode) + 1) % order.length];
+  const btnLabels   = { 'de-pt': 'DE → PT', 'pt-de': 'PT → DE', 'mixed': '🔀 Gemischt' };
+  const badgeLabels = { 'de-pt': 'Deutsch → Português', 'pt-de': 'Português → Deutsch', 'mixed': 'Gemischt' };
+  document.getElementById('btn-direction').textContent = btnLabels[mode];
+  document.getElementById('mode-badge').textContent = badgeLabels[mode];
+  if (mode === 'mixed') assignMixedSides();
+  idx = 0; showCard();
+}
+
+function restart() {
+  idx = 0; stats = { good: 0, bad: 0, seen: 0 };
+  document.getElementById('stat-good').textContent = 0;
+  document.getElementById('stat-bad').textContent = 0;
+  document.getElementById('stat-total').textContent = 0;
+  document.getElementById('scene').style.display = 'block';
+  document.getElementById('finish').classList.remove('visible');
+  showCard();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); flipCard(); }
+  else if (e.key === 'ArrowRight') nextCard();
+  else if (e.key === 'ArrowLeft') prevCard();
+  else if (e.key.toLowerCase() === 'g') rate('good');
+  else if (e.key.toLowerCase() === 'n') rate('bad');
+});
+
+buildCatButtons();
+applyFilters();
+</script>
+</body>
+</html>
