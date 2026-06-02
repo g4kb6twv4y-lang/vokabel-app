@@ -711,7 +711,13 @@ function showCard() {
   document.getElementById('back-conj').textContent = (dir === 'de-pt') ? d.conj : '';
   document.getElementById('counter').textContent = `${idx + 1} / ${cards.length}`;
   document.getElementById('progress').style.width = `${((idx + 1) / cards.length) * 100}%`;
-  document.getElementById('card').classList.remove('flipped');
+  const cardEl = document.getElementById('card');
+  if (cardEl.classList.contains('flipped')) {
+    cardEl.style.transition = 'none';
+    cardEl.classList.remove('flipped');
+    void cardEl.offsetWidth;
+    cardEl.style.transition = '';
+  }
   isFlipped = false;
 
   if (idx >= cards.length) {
